@@ -1,8 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define BUFFER_SIZE 256
 
 int main(int argc, char** argv){
     FILE* input_txt;
-    char  instr;
+    char  buffer[BUFFER_SIZE];
     
     // Read in the input file specified by argv
     if(argc==1){
@@ -16,8 +20,8 @@ int main(int argc, char** argv){
         }
     }
 
-    // Begin processing direction instructions until EOF
-    while((instr=fgetc(input_txt))!=EOF){
+    // Begin processing lines until EOF
+    while(fscanf(input_txt, "%s ", buffer))!=EOF){
         
     }
     
