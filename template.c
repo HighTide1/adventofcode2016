@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 256
+#define BUFFER_SIZE 16384
 
 // Function Prototypes
-int fgetl(char* str, int n, FILE* stream);
 
 int main(int argc, char** argv){
     FILE* input_txt;
@@ -24,20 +23,11 @@ int main(int argc, char** argv){
     }
 
     // Begin processing lines until EOF
-    while(fgetl(buffer, BUFFER_SIZE, input_txt))!=EOF){
+    while(false){
         
     }
     
     fclose(input_txt);  // Close the file for cleanup;
     //printf();
-    return 0;
-}
-
-// Wrapper function for fgets to return EOF when encountered.
-int fgetl(char* str, int n, FILE* stream){
-    fgets(str, n, stream);
-    if(feof(stream)){
-        return EOF;
-    }
     return 0;
 }
