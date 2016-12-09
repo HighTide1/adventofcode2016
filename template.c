@@ -4,6 +4,9 @@
 
 #define BUFFER_SIZE 256
 
+// Function Prototypes
+int fgetl(char* str, int n, FILE* stream);
+
 int main(int argc, char** argv){
     FILE* input_txt;
     char  buffer[BUFFER_SIZE];
@@ -21,11 +24,20 @@ int main(int argc, char** argv){
     }
 
     // Begin processing lines until EOF
-    while(fscanf(input_txt, "%s ", buffer))!=EOF){
+    while(fgetl(buffer, BUFFER_SIZE, input_txt))!=EOF){
         
     }
     
     fclose(input_txt);  // Close the file for cleanup;
     //printf();
+    return 0;
+}
+
+// Wrapper function for fgets to return EOF when encountered.
+int fgetl(char* str, int n, FILE* stream){
+    fgets(str, n, stream);
+    if(feof(stream)){
+        return EOF;
+    }
     return 0;
 }
