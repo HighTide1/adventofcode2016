@@ -3,6 +3,8 @@
 #include <string.h>
 
 #define BUFFER_SIZE 16384
+#define VAL_1 61
+#define VAL_2 17
 
 // Bot Structure
 typedef struct bot_t{
@@ -18,18 +20,18 @@ BOT* head=NULL;          // Linked List of Bots
 
 // Function Prototypes
 void assign_num(BOT* b, int n);
-int  check_primed(BOT* b);
+void build_fact(char* s);
+void check_primed(BOT* b);
 BOT* create_bot(int n, int t, int m1, int m2, BOT* lr, BOT* hr);
 BOT* find_bot(int n, int t);
-int  mod_bot(char* s);
 void free_list(void);
+int  run_fact(void);
 
 int main(int argc, char** argv){
     FILE* input_txt;
     char  buffer[BUFFER_SIZE];
-    int   ans=1;
-    BOT*  temp; 
-   
+    int   ans;
+    
     // Read in the input file specified by argv
     if(argc==1){
         fprintf(stderr, "No specified input file.\n");
@@ -45,25 +47,15 @@ int main(int argc, char** argv){
     // Begin processing lines until EOF
     fgets(buffer, BUFFER_SIZE, input_txt);
     while(feof(input_txt)==0){
-        mod_bot(buffer);
+        build_fact(buffer);
         fgets(buffer, BUFFER_SIZE, input_txt);
     }
+    ans = run_fact();
 
-    temp = head;
-    while(temp!=NULL){
-        if(temp->type==1){
-            if(temp->bot_num<3){
-                ans *= abs(temp->m1);
-                ans *= abs(temp->m2);
-            }
-        }
-        temp = temp->next;
-    }
-    
     fclose(input_txt);  // Close the file for cleanup;
     free_list();
 
-    printf("The multiplication of the O1, O2, and O3 is %d.\n", ans);
+    printf("The multiplication of 00, 01, and 02 is %d\n", ans);
     return 0;
 }
 
@@ -84,34 +76,99 @@ void assign_num(BOT* b, int n){
     }
 }
 
+
+// Creates or modifies an existing bot in the linked list.
+// If this modification gives the bot 2 numbers, the instructions
+// are run through until completion.
+void build_fact(char* s){
+    BOT*  temp, *t1=NULL, *t2=NULL;
+    int   bn, m, r1, r2, ty1, ty2;
+
+    // Format Strings
+    char* v="value %d goes to bot %d";
+    char* g1="bot %d gives low to bot %d and high to bot %d";
+    char* g2="bot %d gives low to output %d and high to bot %d";
+    char* g3="bot %d gives low to output %d and high to output %d";
+
+    // For instructions, there are 2 primary types: Value Assign
+    // and Give Instructions.
+    if(sscanf(s, v, &m, &bn)==2){
+        temp = find_bot(bn, 0);
+        if(temp!=NULL){
+            if(temp->m1==-1){
+                temp->m1 = m;
+            }else{
+                assign_num(temp, m);
+            }
+        }else{
+            create_bot(bn, 0, m, -1, NULL, NULL);
+        }
+    }else{
+        // For Give Instructions, there are a couple cases
+        // to consider. We either give from 1 bot to 2 bots,
+        // or 1 bot to a bot and output, or just 1 bot to 2 outs.
+        if(sscanf(s, g1, &bn, &r1, &r2)==3){
+            ty1 = 0;
+            ty2 = 0;
+        }else if(sscanf(s, g2, &bn, &r1, &r2)==3){
+            ty1 = 1;
+            ty2 = 0;
+        }else if(sscanf(s, g3, &bn, &r1, &r2)==3){
+            ty1 = 1;
+            ty2 = 1;
+        }
+
+        t1 = find_bot(r1, ty1);
+        if(t1==NULL){
+            t1 = create_bot(r1, ty1, -1, -1, NULL, NULL);
+        }
+        t2 = find_bot(r2, ty2);
+        if(t2==NULL){
+            t2 = create_bot(r2, ty2, -1, -1, NULL, NULL);
+        }
+        temp = find_bot(bn, 0);
+        if(temp!=NULL){
+            temp->l_r = t1;
+            temp->h_r = t2;
+        }else{
+            create_bot(bn, 0, -1, -1, t1, t2);
+        }
+    }
+}
+
+
 // Recursivelly called function to check and see if a given
 // bot is primed. If it is, it gives out its chips,
 // and checks to see if recievers are primed as well.
-int check_primed(BOT* b){
-    int m1, m2, found_num=-1;
+void check_primed(BOT* b){
+    int m1, m2;
 
-    if(b!=NULL && b->m1!=-1 && b->m2!=-1 && b->l_r!=NULL && b->h_r!=NULL){
+    // The only bots that are 'primed' are those that
+    // have been created, and are not outputs
+    if(b!=NULL && b->type==0){
         m1 = b->m1;
-        m2 = b->m2;        
-        b->m1 = -1;
-        b->m2 = -1;
-        if(m1 > m2){
-            assign_num(b->l_r, m2);
-            assign_num(b->h_r, m1);
-        }else{
-            assign_num(b->l_r, m1);
-            assign_num(b->h_r, m2);
-        }
+        m2 = b->m2;
         
-        found_num = check_primed(b->l_r);
-        if(found_num!=-1){
-            return found_num;
-        }else{
-            found_num = check_primed(b->h_r);
-            return found_num;
+        // If our current bot is comparing our two search values,
+        // then we can return our result. Otherwise, we need to
+        // continue processing.
+        if(m1!=-1 && m2!=-1 && (b->l_r!=NULL && b->h_r!=NULL)){
+            b->m1 = -1;
+            b->m2 = -1;
+            if(m1 > m2){
+                assign_num(b->l_r, m2);
+                assign_num(b->h_r, m1);
+            }else{
+                assign_num(b->l_r, m1);
+                assign_num(b->h_r, m2);
+            }
+
+            // We need to check for a possible cascade of primed
+            // bots after a comparison was carried out.
+            check_primed(b->l_r);
+            check_primed(b->h_r);
         }
     }
-    return -1;
 }
 
 // Creates a bot of the given parameters, and pushesit.
@@ -143,77 +200,6 @@ BOT* find_bot(int n, int t){
     return NULL;
 }
 
-// Creates or modifies an existing bot in the linked list.
-// If this modification gives the bot 2 numbers, the instructions
-// are run through until completion.
-int mod_bot(char* s){
-    BOT*  temp, *t1=NULL, *t2=NULL;
-    int   bn, m, r1, ty1, r2, ty2, cb=-1;
-    char* v="value %d goes to bot %d";
-    char* g1="bot %d gives low to bot %d and high to bot %d";
-    char* g2="bot %d gives low to output %d and high to bot %d";
-    char* g3="bot %d gives low to output %d and high to output %d";
-
-    // For instructions, there are 2 primary types: Value Assign
-    // and Give Instructions.
-    printf("%s\n", s);
-    if(sscanf(s, v, &m, &bn)==2){
-        temp = find_bot(bn, 0);
-        if(temp!=NULL){
-            if(temp->m1==-1){
-                temp->m1 = m;
-            }else{
-                assign_num(temp, m);
-            }
-        }else{
-            create_bot(bn, 0, m, -1, NULL, NULL);
-        }
-    }else{
-        // For Give Instructions, there are a couple cases
-        // to consider. We either give from 1 bot to 2 bots,
-        // or 1 bot to a bot and output, or just 1 bot to 2 outs.
-        if(sscanf(s, g1, &bn, &r1, &r2)==3){
-            ty1 = 0;
-            ty2 = 0;
-        }else if(sscanf(s, g2, &bn, &r1, &r2)==3){
-            ty1 = 1;
-            ty2 = 0;
-        }else if(sscanf(s, g3, &bn, &r1, &r2)==3){
-            ty1 = 1;
-            ty2 = 1;
-        }
-
-        t1 = find_bot(r1, ty1);
-        if(t1==NULL){
-            t1 = create_bot(r1, ty1, -1, -1, NULL, NULL);
-        }
-
-        t2 = find_bot(r2, ty2);
-        if(t2==NULL){
-            t2 = create_bot(r2, ty2, -1, -1, NULL, NULL);
-        }
-    
-        temp = find_bot(bn, 0);
-        if(temp!=NULL){
-            temp->l_r = t1;
-            temp->h_r = t2;
-        }else{
-            create_bot(bn, 0, -1, -1, t1, t2);
-        }
-    }
-
-    // Now we need to check and see if a bot is primed.
-    temp = head;
-    while(temp!=NULL){
-        cb = check_primed(temp);
-        if(cb!=-1){
-            return cb;
-        }
-        temp = temp->next;
-    }
-    return -1;
-}
-
 // Helper Function to free the linked list.
 void free_list(void){
     BOT* temp=head;
@@ -223,4 +209,31 @@ void free_list(void){
         free(temp);
         temp = head;
     }
+}
+
+// Runs the 'factory' until the comparison match is found.
+int run_fact(void){
+    int mult = 1;
+    BOT* worker;
+
+    // Run the factory until every bot is finished.
+    worker = head;
+    while(worker!=NULL){
+        check_primed(worker);
+        worker = worker->next;
+    }
+
+    // Afterwards, go through the outputs to find O0 * O1 * O2
+    worker = head;
+    while(worker!=NULL){
+        if(worker->type==1){
+            if(worker->bot_num<3){
+                mult *= abs(worker->m1);
+                mult *= abs(worker->m2);
+            }
+        }
+        worker = worker->next;
+    }
+
+    return mult;
 }
