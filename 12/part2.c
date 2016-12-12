@@ -21,7 +21,7 @@ void add_instr(char* buffer);
 int main(int argc, char** argv){
     FILE*  input_txt;
     char   buffer[BUFFER_SIZE];
-    int    regs[NUM_REGS] = {0, 0, 0, 0};
+    int    regs[NUM_REGS] = {0, 0, 1, 0};
     char   reg, tmp_reg;
     int    val, tmp_val;
     INSTR* curr_instr;
