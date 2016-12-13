@@ -100,11 +100,9 @@ int has_equivalent(STATE* s){
     memcpy(p1, s->map, ELEMENTS*2);
     while(temp!=NULL){
         memcpy(p2, temp->map, ELEMENTS*2);
-        /*if(s->num_steps==13){
-            printf("------------\n");
-            for(i=0;i<ELEMENTS;i++){
-                printf("%d, %d | %d, %d\n", p1[i][0], p1[i][1], p2[i][0], p2[i][1]);
-            }
+        /*printf("------------\n");
+        for(i=0;i<ELEMENTS;i++){
+            printf("%d, %d | %d, %d\n", p1[i][0], p1[i][1], p2[i][0], p2[i][1]);
         }*/
 
         for(i=0;i<ELEMENTS;i++){
@@ -114,7 +112,7 @@ int has_equivalent(STATE* s){
                     equivalent = 1;
                     p2[j][0] = -1;
                     p2[j][1] = -1;
-                    /*if(s->num_steps==13){
+                    /*if(s->num_steps==2){
                         printf("-!-\n");
                         for(j=0;j<ELEMENTS;j++){
                             printf("%d, %d | %d, %d\n", p1[j][0], p1[j][1], p2[j][0], p2[j][1]);
@@ -123,18 +121,20 @@ int has_equivalent(STATE* s){
                     break;
                 }
             }
+            if(equivalent==0){
+                break;
+            }
         }
         if(equivalent==1){
-            /*if(s->num_steps==13){
-                printf("Equivalent Found.\n");
-            }*/
+            //printf("Equivalent Found.\n");
+            //for(i=0;i<ELEMENTS;i++){
+            //    printf("%d, %d | %d, %d\n", p1[i][0], p1[i][1], p2[i][0], p2[i][1]);
+            //}
             return 1;
         }
         temp = temp->next;
     }
-    /*if(s->num_steps==13){
-        printf("Unique Found.\n");
-    }*/
+    printf("Unique Found.\n");
     return 0;
 }
 
@@ -185,7 +185,8 @@ int move_level(int s){
     STATE* new_list = NULL;
    
     printf("Curr Step: %d\n", s); 
-    while(temp!=NULL){
+    //printf("%d\n", temp->num_steps);
+    while(temp!=NULL && temp->num_steps==s){
         memcpy(m, temp->map, ELEMENTS*2);
         cf = temp->floor;
 
@@ -202,8 +203,9 @@ int move_level(int s){
                                 
                                 perm = create_state(nm1, cf-1, s+1);
                                 if(is_valid(perm)==1 && has_equivalent(perm)==0){
-                                    perm->next = new_list;
-                                    new_list = perm;
+                                    perm->next = head;//new_list;
+                                    //new_list = perm;
+                                    head = perm;
                                     size++;
                                     if(perm->distance==0){
                                         return 1;
@@ -218,8 +220,9 @@ int move_level(int s){
 
                                 perm = create_state(nm2, cf+1, s+1);
                                 if(is_valid(perm)==1 && has_equivalent(perm)==0){
-                                    perm->next = new_list;
-                                    new_list = perm;
+                                    perm->next = head;//new_list;
+                                    //new_list = perm;
+                                    head = perm;
                                     size++;
                                     if(perm->distance==0){
                                         return 1;
@@ -235,8 +238,8 @@ int move_level(int s){
         }
         temp = temp->next;
     }
-    free_list();    // Free the old list, and replace it with new one.
-    head = new_list;
+    //free_list();    // Free the old list, and replace it with new one.
+    //head = new_list;
     printf("Curr Size: %d\n", size);
     return 0;
 }
