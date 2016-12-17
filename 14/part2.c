@@ -39,20 +39,19 @@ int main(int argc, char** argv){
         
         // If our current hash has a triple, then we check the next additional
         // 1000 indexes for a quintuple match.
-        /*if((m=has_triple(hash))!=-1){
+        if((m=has_triple(hash))!=-1){
             //printf("Triple Found w/ char %x - %d\n", m, i);
             for(j=i+1;j<i+1+WINDOW;j++){
                 memcpy(hash, generate_hash(salt, j), MD5_DIGEST_LENGTH);
                 if(has_quint(hash, m)==1){
-                    printf("Quint Found: %d\n", i);
-                    print_hash(hash);
+                    //printf("Quint Found: %d\n", i);
+                    //print_hash(hash);
                     keys_found += 1;
                     break;
                 }
             }
-        }*/
+        }
         i += 1;
-        keys_found = NUM_KEYS;
     }
     
     printf("The 64th key integer is %d.\n", i - 1);
@@ -63,10 +62,10 @@ int main(int argc, char** argv){
 // in the hash table if not previously determined.
 unsigned char* generate_hash(char* s, int i){
     MD5_CTX       context;
-    int           j;
+    int           j, k;
     char          buffer[BUFFER_SIZE];
     unsigned char hash[MD5_DIGEST_LENGTH];
-
+    
     // If the hash has already been generated, just return it to the caller.
     if(i>=gen_index){
         // Otherwise, create the hash based off the initial salt and index,
@@ -75,12 +74,16 @@ unsigned char* generate_hash(char* s, int i){
         MD5_Init(&context);
         MD5_Update(&context, buffer, strlen(buffer));
         MD5_Final(hash, &context);
-        print_hash(hash);
+        //print_hash(hash);
         for(j=0;j<KEY_STRETCH;j++){
+            // Convert the last hash into a string representation, to stretch
+            for(k=0;k<MD5_DIGEST_LENGTH;k++){
+                snprintf(&buffer[2*k], BUFFER_SIZE, "%.2x", hash[k]);
+            }
             MD5_Init(&context);
-            MD5_Update(&context, hash, MD5_DIGEST_LENGTH);
+            MD5_Update(&context, buffer, strlen(buffer));
             MD5_Final(hash, &context);
-            print_hash(hash);
+            //print_hash(hash);
         }
         
         // Copy the 'stretched' hash into the hash table for future reference.
@@ -138,7 +141,7 @@ void print_hash(unsigned char* h){
     int i;
 
     for(i=0;i<MD5_DIGEST_LENGTH;i++){
-        printf("%x", h[i]);
+        printf("%.2x", h[i]);
     }
     printf("\n");
 }

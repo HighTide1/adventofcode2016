@@ -107,7 +107,7 @@ void print_hash(unsigned char* h){
     int i;
 
     for(i=0;i<MD5_DIGEST_LENGTH;i++){
-        printf("%x", h[i]);
+        printf("%.2x", h[i]);
     }
     printf("\n");
 }
