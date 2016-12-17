@@ -6,16 +6,21 @@
 #define BUFFER_SIZE 1024
 #define NUM_KEYS 64
 #define WINDOW 1000
+#define KEY_STRETCH 2016
+#define TABLE_SIZE  1000000
 
 // Function Prototypes
-char has_triple(unsigned char* h);
-int  has_quint(unsigned char* h, char m);
-void print_hash(unsigned char* h);
+unsigned char* generate_hash(char* s, int i);
+char           has_triple(unsigned char* h);
+int            has_quint(unsigned char* h, char m);
+void           print_hash(unsigned char* h);
+
+// Cache of generated Hashes
+unsigned char HASH_TABLE[TABLE_SIZE][MD5_DIGEST_LENGTH];
+int gen_index = -1;
 
 int main(int argc, char** argv){
-    MD5_CTX       context;
     char*         salt;
-    char          buffer[BUFFER_SIZE];
     unsigned char hash[MD5_DIGEST_LENGTH];
     char          m;
     int           i=0, j, keys_found=0;
@@ -30,31 +35,61 @@ int main(int argc, char** argv){
 
     // Generate and check hashes until 64 keys have been found.
     while(keys_found<NUM_KEYS){
-        // Create the current salt + index hash. 
-        snprintf(buffer, BUFFER_SIZE, "%s%d", salt, i);
-        MD5_Init(&context);
-        MD5_Update(&context, buffer, strlen(buffer));
-        MD5_Final(hash, &context);
+        memcpy(hash, generate_hash(salt, i), MD5_DIGEST_LENGTH);
         
         // If our current hash has a triple, then we check the next additional
         // 1000 indexes for a quintuple match.
-        if((m=has_triple(hash))!=-1){
+        /*if((m=has_triple(hash))!=-1){
+            //printf("Triple Found w/ char %x - %d\n", m, i);
             for(j=i+1;j<i+1+WINDOW;j++){
-                snprintf(buffer, BUFFER_SIZE, "%s%d", salt, j);
-                MD5_Init(&context);
-                MD5_Update(&context, buffer, strlen(buffer));
-                MD5_Final(hash, &context);
+                memcpy(hash, generate_hash(salt, j), MD5_DIGEST_LENGTH);
                 if(has_quint(hash, m)==1){
+                    printf("Quint Found: %d\n", i);
+                    print_hash(hash);
                     keys_found += 1;
                     break;
                 }
             }
-        }
+        }*/
         i += 1;
+        keys_found = NUM_KEYS;
     }
     
     printf("The 64th key integer is %d.\n", i - 1);
     return 0;
+}
+
+// Generates a 'stretched' hash of the input salt and index, and stores the result
+// in the hash table if not previously determined.
+unsigned char* generate_hash(char* s, int i){
+    MD5_CTX       context;
+    int           j;
+    char          buffer[BUFFER_SIZE];
+    unsigned char hash[MD5_DIGEST_LENGTH];
+
+    // If the hash has already been generated, just return it to the caller.
+    if(i>=gen_index){
+        // Otherwise, create the hash based off the initial salt and index,
+        // and perform stretching on it.
+        snprintf(buffer, BUFFER_SIZE, "%s%d", s, i);
+        MD5_Init(&context);
+        MD5_Update(&context, buffer, strlen(buffer));
+        MD5_Final(hash, &context);
+        print_hash(hash);
+        for(j=0;j<KEY_STRETCH;j++){
+            MD5_Init(&context);
+            MD5_Update(&context, hash, MD5_DIGEST_LENGTH);
+            MD5_Final(hash, &context);
+            print_hash(hash);
+        }
+        
+        // Copy the 'stretched' hash into the hash table for future reference.
+        for(j=0;j<MD5_DIGEST_LENGTH;j++){
+            HASH_TABLE[i][j] = hash[j];
+        }
+        gen_index++;
+    }
+    return HASH_TABLE[i];
 }
 
 // Determines if the passed hash has a triple character, and returns the first occuring
@@ -68,14 +103,10 @@ char has_triple(unsigned char* h){
         c1 = h[i] & 0x0F;
         c2 = (h[i+1] & 0xF0) >> 4;
         c3 = h[i+1] & 0x0F;
-        //printf("%x %x\n", h[i], h[i+1]);
-        //printf("%d %d %d %d\n", m, c1, c2, c3);
-        //printf("%x - %x, %x\n", m, c1, c2);
         if(c1==m && c2==m){
             return m;
         }
         m = c1;
-        //printf("%x - %x, %x\n", m, c2, c3);
         if(c2==m && c3==m){
             return m;
         }
