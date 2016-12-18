@@ -27,9 +27,9 @@ int main(int argc, char** argv){
 // Extends the input string to be a minimum of l characters long, and
 // subsequently generates the checksum for the new data.
 void generate_checksum(char* s, int l){
-    char buffer[BUFFER_SIZE];
-    char check[BUFFER_SIZE];
-    char data[BUFFER_SIZE];
+    char* buffer = malloc(BUFFER_SIZE);
+    char* check = malloc(BUFFER_SIZE);
+    char* data = malloc(BUFFER_SIZE);
     int  i, dl;
 
     strcpy(data, s);
