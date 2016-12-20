@@ -11,7 +11,7 @@ int main(int argc, char** argv){
     FILE*             input_txt;
     char              buffer[BUFFER_SIZE];
     char*             valid_ips;
-    unsigned long int i, start, end, min_ip;
+    unsigned long int i, start, end, num_ips=0;
 
     //printf("%d\n", sizeof(int));
 
@@ -50,11 +50,14 @@ int main(int argc, char** argv){
     }
 
     // Find the first non-zero value in the valid_ips.
-    for(min_ip=0;valid_ips[min_ip]==0;min_ip++){
+    for(i=0;i<NUM_IPS;i++){
+        if(valid_ips[i]==1){
+            num_ips++;
+        }
     }
     
     fclose(input_txt);  // Close the file for cleanup;
     free(valid_ips);
-    printf("The lowest-valued IP that is not blocked is %lu.\n", min_ip);
+    printf("The number of valid IPs is %lu.\n", num_ips);
     return 0;
 }
