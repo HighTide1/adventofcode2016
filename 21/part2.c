@@ -22,7 +22,7 @@ void swap(char* s, int i, int j);
 int main(int argc, char** argv){
     char* input_txt;
     char* goal_str;
-    char* in_str = "abcdefgh";
+    char  in_str[] = "abcdefgh";
 
     // Read in the input file specified by argv
     if(argc!=3){
@@ -41,13 +41,17 @@ int main(int argc, char** argv){
 
 // Generate and test all permutations of the string to test them.
 void generate_permutations(char* input, char* goal, char* s, int l, int r){
-    int  i;
+    char* tmp;
+    int   i;
 
     if(l==r){
+        tmp = (char*)malloc((strlen(s)+1)*sizeof(char));
+        strcpy(tmp, s);
         run_file(input, s);
         if(strcmp(s, goal)==0){
-            printf("The unscrambled string is %s.\n", s);
+            printf("The unscrambled string is %s.\n", tmp);
         }
+        free(tmp);
     }else{
         //printf("%s\n", s);
         for(i=l;i<=r;i++){
