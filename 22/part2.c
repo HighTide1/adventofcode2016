@@ -37,9 +37,9 @@ int main(int argc, char** argv){
         input_name = argv[1];
     }
     create_gridcenter(input_name);
-    //print_gridcenter();
+    print_gridcenter();
  
-    //printf("There are %d viable pairs available.\n", find_pairs());
+    printf("To solve, count the number of moves required to move _ to the goal, and then to the readable data.\n");
     return 0;
 }
 
@@ -109,7 +109,13 @@ void print_gridcenter(void){
     for(r=0;r<ROWS;r++){
         for(c=0;c<COLS;c++){
             c_node = gridcenter[r][c];
-            printf("(%3d/%3d) ", c_node.used_space, c_node.used_space+c_node.free_space);
+            if(c_node.used_space==0){
+                printf("  _   ");
+            }else if(c_node.used_space>100){
+                printf("  |   ");
+            }else{
+                printf("%d/%d ", c_node.used_space, c_node.used_space+c_node.free_space);
+            }
         }
         printf("\n");
     }
