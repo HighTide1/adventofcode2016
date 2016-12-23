@@ -68,8 +68,8 @@ int main(int argc, char** argv){
     int    val, jmp_val;
 
     // Read in the input file specified by argv
-    if(argc==1){
-        fprintf(stderr, "No specified input file.\n");
+    if(argc!=3){
+        fprintf(stderr, "No specified input file or starting reg A value.\n");
         return -1;
     }else{
         input_txt = fopen(argv[1], "r"); // 1st Index is 1st arg
